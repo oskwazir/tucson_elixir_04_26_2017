@@ -27,131 +27,100 @@
 		<div class="reveal">
 			<div class="slides">
 				<section id="fragments">
-					<h1>Elixir 101 - IEx</h1>
-						<p>Understand what you can do with Elixir’s interactive shell</p>
+					<h1 style="font-size:50px;">Lifecyle of a Connection in Phoenix</h1>
+						<p style="font-size:20px;">Connection comes in. Connection goes out. I explain it.</p>
 				</section>
 				<section>
 					<h2>Omer Wazir</h2>
 					<p>Twitter: @thewazir</p>
 					<p>Slack: @omerwazir</p>
 					<p>Engineer at Tucson Embedded Systems</p>
+					<p>I work fulltime on Elixir now 👍</p>
 				</section>
 				<section>
-				<h2>How to install IEx</h2>
-					<a href="http://elixir-lang.org/install.html">Install Elixir and you get IEx for free 😎</a>
-				</section>
-				<section>
-					<h2>Start IEx</h2>
-					<p>Interactive mode <span style="text-decoration: underline;">evalutes</span> any Elixir expression</p>
-					<p>Excellent place to get comfortable with Elixir &amp; OTP</p>
-					<pre><code class="hljs" data-trim contenteditable>
-$ iex
-Erlang/OTP 19 [erts-8.2] [source] [64-bit] [smp:8:8] [async-threads:10] [hipe] [kernel-poll:false]
-
-Interactive Elixir (1.4.1) - press Ctrl+C to exit (type h() ENTER for help)
-iex(1)> person = %{name: "Remo Williams"}
-%{name: "Remo Williams"}
-iex(2)>
-					</code></pre>			
-				</section>
-				<section>
-					<h2>A few things IEx can do</h2>
+					<h2>What I'll cover</h2>
 					<ul>
-						<li><a href="https://hexdocs.pm/iex/IEx.Helpers.html">IEx Helpers</a>... AMAZING</li>
-						<li>Autocomplete with . (dot) lookup</li>
-						<li>User shells &amp; Remote shells</li>
-						<li>Evaluates Code - not so good for benchmarks</li>
-						<li>Helps prevent involuntary regular expressions</li>
-						<li>Shell Configuration</li>
-					</ul>
-					<p>All features detailed <a href="https://hexdocs.pm/iex/IEx.html">here</a></p>
-				</section>
-				<section>
-					<h2>IEx.helpers</h2>
-					<p>Run <span style="text-decoration: underline;"><code>h IEx.Helpers</code></span> inside IEx</p>
-					<h4>Some examples</h4>
-					<ul>
-						<li><code>h\1</code> - get module docs</li>
-						<li><code>i\1</code> - print stuff about a type</li>
-						<li><code>respawn\0</code> - respawn shell</li>
-						<li>... 24 total helpers available</li>
+					<li>something</li>
 					</ul>
 				</section>
 				<section>
-					<h2>dot helpers</h2>
-					<p>If you don't know what functions are available in a module, type the module name with a dot on the end and press tab to see a list.</p>
-				</section>
-				<section>
-					<h2>#iex:break</h2>
-					<pre><code class="hljs" data-trim contenteditable>
-iex(2)> %{user: "Artoo",
-...(2)> name: "R2D2',
-...(2)> type: 'robot'}
-...(2)> .
-...(2)> ;
-...(2)> end
-...(2)> %}
-...(2)> #iex:break
-** (TokenMissingError) iex:2: incomplete expression
-					</code></pre>
-				</section>
-				<section>
-					<h2>Shell Configuration</h2>
+					<h2>How it all starts</h2>
 					<ul>
-						<li>:colors</li>
-						<li>:inspect</li>
-						<li>:width</li>
-						<li>:history_size</li>
-						<li>:default_prompt</li>
-						<li>:alive_prompt</li>
+						<li><code>YourApp.Mixfile.application</code> defines what to start</li>
+						<li><code>YourApp.Application.start</code> will launch a Repo Supervisor &amp; an Endpoint Supervisor</li>
+						<li>We only care about the YourApp.Web.Endpoint Supervisor</li>
+					</ul>
+					<p style="text-align:left;font-size:2rem;">With <code>--no-ecto</code> there won't be Repo Supervisor</p>
+				</section>
+				<section>
+					<h2>Yourapp.Web.Endpoint</h2>
+					<p><code>lib/yourapp/web/endpoint.ex</code></p>
+					<p>A lot of Plug(s) but the key part is line #2 <br> <code> use Phoenix.Endpoint, otp_app: :yourapp</code></p>
+					<p>If you look into <code>Phoenix.Endpoint</code> you will see macros. I have no love for reading macros.</p>
+				</section>
+				<section>
+					<h2>Phoenix.Endpoint</h2>
+					<p><code>deps/phoenix/lib/phoenix/endpoint.ex</code></p>
+					<ul>
+						<li>starts <code>Phoenix.Endpoint.Supervisor</code></li>
+						<li>which starts <code>Phoenix.Endpoint.CowboyHandler</code></li>
+
 					</ul>
 				</section>
 				<section>
-					<h2>:inspect</h2>
-					<p>Inspect options used by the shell when printing results of expression evaluation</p>
-					<p>If you want to see everything during IO.inspect\1 then do this:</p>
-					<pre><code>
-IEx.configure [inspect: [limit: :infinity]]
-					</code></pre>
-					<a href="https://hexdocs.pm/elixir/Inspect.Opts.html">Inspect.Opts</a>
+				<h2>World of Erlang</h2>
+					<h3>Phoenix.Endpoint.CowboyHandler</h3>
+					<p style="text-align:left;">From here on I stop following what happens. The important parts are</p>
+					<ul>
+						<li><code>Plug.Adapters.Cowboy.Handler</code> dispatches</li>
+						<li>Ranch starts Cowboy processes</li>
+					</ul>
 				</section>
 				<section>
-					<h2>Different inspects</h2>
-					<p><code>inspect\1</code> and <code>i\1</code> are different</p>
-					<pre><code>
-iex(2)> foo = %{ name: "Bruce Wayne", location: "Gotham"}
-%{location: "Gotham", name: "Bruce Wayne"}
-iex(3)> inspect(foo)
-"%{location: \"Gotham\", name: \"Bruce Wayne\"}"
-iex(4)> i(foo)
-Term
-  %{location: "Gotham", name: "Bruce Wayne"}
-Data type
-  Map
-Reference modules
-  Map
-Implemented protocols
-  IEx.Info, Collectable, Enumerable, Inspect
-					</code></pre>
+				<h2>Conn struct is alive</h2>
+					<h3>Plug.Adapters.Cowboy.Handler</h3>
+					<code>@connection Plug.Adapters.Cowboy.Conn</code>
+					<p style="text-align:left;">The <code>upgrade</code> function will turn the request into a <code>conn</code> struct</p>
 				</section>
 				<section>
-					<h2>Pry into code</h2>
-					<p>This is its own talk but IEx.pry is useful for debugging</p>
-					<pre><code>
-defmodule say do
- require IEx
+					<h3>Plug.Adapters.Cowboy.Conn</h3>
+					<pre><code>  def conn(req, transport) do
+    {path, req} = :cowboy_req.path req
+    {host, req} = :cowboy_req.host req
+    {port, req} = :cowboy_req.port req
+    {meth, req} = :cowboy_req.method req
+    {hdrs, req} = :cowboy_req.headers req
+    {qs, req}   = :cowboy_req.qs req
+    {peer, req} = :cowboy_req.peer req
+    {remote_ip, _} = peer
 
- do something() do
-  IEx.pry
-
-  IO.puts("Hello, World")
- end
-end
-					</code></pre>
+    %Plug.Conn{
+      adapter: {__MODULE__, req},
+      host: host,
+      method: meth,
+      owner: self(),
+      path_info: split_path(path),
+      peer: peer,
+      port: port,
+      remote_ip: remote_ip,
+      query_string: qs,
+      req_headers: hdrs,
+      request_path: path,
+      scheme: scheme(transport)
+   }
+  end</code></pre>
 				</section>
 				<section>
-					<h2>That's all I got for you</h2>
+					<h2>Back to Yourapp</h2>
+					<p><code>Plug.Adapters.Cowboy.Handler</code> will try to send the request and connection to Yourapp.Endpoint.call</p>
+					<p>Macros make this hard to follow, but you'll see the code in <code>Phoenix.Endpoint</code></p>
 				</section>
+				<section>
+					<h2>So many plugs</h2>
+					<p>The Conn now goes through all the plugs defined in Yourapp.Web.Endpoint, I won't follow through all that.</p>
+				</section>
+
+				
 			</div>
 		</div>
 
