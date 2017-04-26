@@ -72,15 +72,16 @@
 					<h3>Phoenix.Endpoint.CowboyHandler</h3>
 					<p style="text-align:left;">From here on I stop following what happens. The important parts are</p>
 					<ul>
-						<li><code>Plug.Adapters.Cowboy.Handler</code> dispatches</li>
+						<li><code>Plug.Adapters.Cowboy.Handler</code> handles dispatches</li>
 						<li>Ranch starts Cowboy processes</li>
+						<li>There is now a server listening for requests</li>
 					</ul>
 				</section>
 				<section>
 				<h2>Conn struct is alive</h2>
 					<h3>Plug.Adapters.Cowboy.Handler</h3>
 					<code>@connection Plug.Adapters.Cowboy.Conn</code>
-					<p style="text-align:left;">The <code>upgrade</code> function will turn the request into a <code>conn</code> struct</p>
+					<p>A request comes in and reaches this module, where the <code>conn</code> struct starts. Specifically the <code>upgrade</code> function will turn the request into a <code>conn</code> struct by calling <code>Plug.Adapters.Cowboy.Conn.conn</code></p>
 				</section>
 				<section>
 					<h3>Plug.Adapters.Cowboy.Conn</h3>
@@ -112,15 +113,47 @@
 				</section>
 				<section>
 					<h2>Back to Yourapp</h2>
-					<p><code>Plug.Adapters.Cowboy.Handler</code> will try to send the request and connection to Yourapp.Endpoint.call</p>
-					<p>Macros make this hard to follow, but you'll see the code in <code>Phoenix.Endpoint</code></p>
+					<p><code>Plug.Adapters.Cowboy.Handler</code> will try to send the request and connection to <code>Yourapp.Endpoint.call</code></p>
+					<p>Macros make this hard to follow because the function that takes the request &amp; conn is added by a macro, but you'll see the code in <code>Phoenix.Endpoint</code></p>
 				</section>
 				<section>
 					<h2>So many plugs</h2>
 					<p>The Conn now goes through all the plugs defined in Yourapp.Web.Endpoint, I won't follow through all that.</p>
+					<p><code>Yourapp.Web.Endpoint</code> defines <code>Yourapp.Web.Router</code> as the last plug.</p>
 				</section>
 
-				
+				<section>
+					<h2>YourApp.Web.Router</h2>
+					<p>Again more macros!.</p>
+					<ul>
+						<li>Prepares some stuff in conn.private</li>
+						<li>Matches route based on properties in conn</li>
+						<li>Executes pipelines which is <code>:browser</code> with a bunch of plugs, these change the conn</li>
+						<li>Conn is then passed to an anonymous dispatch function which will run <code>Yourapp.Web.PageController.call</code></li>
+					</ul>
+					<p style="font-size:1.5rem;text-align:left;">See: <code>Phoenix.Router.__call__({conn, pipeline, dispatch})</code></p>
+				</section>
+				<section>
+					<h2>Phoenix.Router.Route</h2>
+					<p>There is a lot of macro magic going on to ensure a route matches a path and to get Conn to a Controller. How Phoenix routing works can be a talk in itself because of all the stuff going on in Phoenix.Router and it's sub modules.</p>
+				</section>
+				<section>
+					<h3>Yourapp.Web.PageController.call</h3>
+					<p>You won't see call as a function in your controller. It's more macro magic. The controller is a plug so Conn passes through it just like everything else. The call/2 function will end up calling the function you defined to be called for a route.</p>
+					<p style="font-size:1.5rem;text-align:left;">See: <code>Phoenix.Controller.Pipeline</code></p>
+				</section>
+				<section>
+					<h2>Action!</h2>
+					<p>When <code>PageController.call</code> is called it will then call the function you defined in Router to be called for a path. In this case <code>Yourapp.Web.PageController.index</code> is called, with <code>conn</code> and <code>conn.params</code> passed in.</p>
+					<pre style="font-size:18px;"><code>
+ def action(%Plug.Conn{private: %{phoenix_action: action}} = conn, _options) do
+    apply(__MODULE__, action, [conn, conn.params])
+ end
+					</code></pre>
+				</section>
+				<section>
+					<h2>Phoenix.Controller.render</h2>
+				</section>
 			</div>
 		</div>
 
